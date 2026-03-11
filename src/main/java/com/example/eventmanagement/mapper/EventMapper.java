@@ -4,8 +4,9 @@ import com.example.eventmanagement.dto.request.EventRequest;
 import com.example.eventmanagement.dto.response.EventResponse;
 import com.example.eventmanagement.entity.Event;
 import org.springframework.stereotype.Component;
+
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class EventMapper {
@@ -35,10 +36,19 @@ public class EventMapper {
 
     public List<EventResponse> toResponseList(List<Event> events) {
         if (events == null) {
-            return null;
+            return Collections.emptyList();
         }
         return events.stream()
             .map(this::toResponse)
-            .collect(Collectors.toList());
+            .toList();
+    }
+
+    public void updateEntity(EventRequest request, Event event) {
+        if (request == null || event == null) {
+            return;
+        }
+        event.setName(request.getName());
+        event.setDate(request.getDate());
+        event.setLocation(request.getLocation());
     }
 }
