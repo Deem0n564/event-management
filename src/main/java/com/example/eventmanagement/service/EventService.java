@@ -63,4 +63,13 @@ public class EventService {
 
         return eventMapper.toResponse(savedEvent);
     }
+
+    @Transactional
+    public EventResponse updateEvent(Long id, EventRequest request) {
+        Event event = eventRepository.findById(id)
+            .orElseThrow(() -> new EventNotFoundException("Event not found with id: " + id));
+        eventMapper.updateEntity(request, event);
+        Event updatedEvent = eventRepository.save(event);
+        return eventMapper.toResponse(updatedEvent);
+    }
 }
