@@ -13,9 +13,6 @@ import java.util.Optional;
 public interface SessionRepository extends JpaRepository<Session, Long> {
     List<Session> findByEventId(Long eventId);
 
-    @EntityGraph(attributePaths = {"speakers", "event"})
-    List<Session> findAll();
-
     @Query("SELECT DISTINCT s FROM Session s LEFT JOIN FETCH s.speakers LEFT JOIN FETCH s.event")
     List<Session> findAllWithSpeakersAndEvent();
 

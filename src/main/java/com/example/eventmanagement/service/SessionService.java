@@ -59,14 +59,14 @@ public class SessionService {
     @Transactional(readOnly = true)
     public List<SessionResponse> getAllSessions() {
         log.debug("Fetching all sessions without optimization (N+1 problem)");
-        List<Session> sessions = sessionRepository.findAll(); // Без @EntityGraph – будет N+1 при обращении к speakers
+        List<Session> sessions = sessionRepository.findAll();
         return sessions.stream().map(sessionMapper::toResponse).toList();
     }
 
     @Transactional(readOnly = true)
     public List<SessionResponse> getAllSessionsWithSpeakers() {
         log.debug("Fetching all sessions with speakers using @EntityGraph (solves N+1)");
-        List<Session> sessions = sessionRepository.findAllWithSpeakersAndEvent(); // Используем метод с JOIN FETCH
+        List<Session> sessions = sessionRepository.findAllWithSpeakersAndEvent();
         return sessions.stream().map(sessionMapper::toResponse).toList();
     }
 

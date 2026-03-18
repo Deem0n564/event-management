@@ -26,7 +26,6 @@ public class AttendeeService {
     public AttendeeResponse createAttendee(AttendeeRequest request) {
         log.debug("Creating attendee: {}", request);
 
-        // Проверяем уникальность email
         Optional<Attendee> existing = attendeeRepository.findByEmail(request.getEmail());
         if (existing.isPresent()) {
             throw new DuplicateEmailException("Attendee with email " + request.getEmail() + " already exists");
