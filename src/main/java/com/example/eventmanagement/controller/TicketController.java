@@ -24,10 +24,9 @@ import java.util.List;
 public class TicketController {
     private final TicketService ticketService;
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public TicketResponse createTicket(@RequestBody @Valid TicketRequest request) {
-        return ticketService.createTicket(request);
+    @GetMapping("/with-details")
+    public List<TicketResponse> getAllTicketsWithDetails() {
+        return ticketService.getAllTicketsWithDetails();
     }
 
     @GetMapping("/{id}")
@@ -38,6 +37,12 @@ public class TicketController {
     @GetMapping
     public List<TicketResponse> getAllTickets() {
         return ticketService.getAllTickets();
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public TicketResponse createTicket(@RequestBody @Valid TicketRequest request) {
+        return ticketService.createTicket(request);
     }
 
     @PutMapping("/{id}")

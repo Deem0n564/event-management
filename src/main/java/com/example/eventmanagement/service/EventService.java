@@ -72,4 +72,12 @@ public class EventService {
         Event updatedEvent = eventRepository.save(event);
         return eventMapper.toResponse(updatedEvent);
     }
+
+    @Transactional
+    public void deleteEvent(Long id) {
+        if (!eventRepository.existsById(id)) {
+            throw new EventNotFoundException("Event not found with id: " + id);
+        }
+        eventRepository.deleteById(id);
+    }
 }
