@@ -170,7 +170,8 @@ public class SessionService {
     }
 
     @Transactional(readOnly = true)
-    public Page<SessionResponse> searchSessionsNativeOptimized(String speakerFirstName, String title, Pageable pageable) {
+    public Page<SessionResponse> searchSessionsNativeOptimized(String speakerFirstName,
+                                                               String title, Pageable pageable) {
 
         SessionSearchKey key = new SessionSearchKey(speakerFirstName, title, pageable.getPageNumber(),
             pageable.getPageSize(), pageable.getSort().toString() + "_native_opt");
