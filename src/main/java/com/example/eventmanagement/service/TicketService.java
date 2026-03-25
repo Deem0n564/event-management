@@ -63,7 +63,7 @@ public class TicketService {
     @Transactional(readOnly = true)
     public List<TicketResponse> getAllTickets() {
         log.debug("Fetching all tickets without optimization (N+1)");
-        List<Ticket> tickets = ticketRepository.findAll(); // Без @EntityGraph будет много запросов
+        List<Ticket> tickets = ticketRepository.findAll();
         return tickets.stream().map(ticketMapper::toResponse).toList();
     }
 
