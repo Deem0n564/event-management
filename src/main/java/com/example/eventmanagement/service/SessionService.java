@@ -1,8 +1,11 @@
 package com.example.eventmanagement.service;
 
 import com.example.eventmanagement.cache.SessionSearchKey;
+import com.example.eventmanagement.dto.projection.SessionFlatDTO;
 import com.example.eventmanagement.dto.request.SessionRequest;
+import com.example.eventmanagement.dto.response.EventResponse;
 import com.example.eventmanagement.dto.response.SessionResponse;
+import com.example.eventmanagement.dto.response.SpeakerResponse;
 import com.example.eventmanagement.entity.Event;
 import com.example.eventmanagement.entity.Session;
 import com.example.eventmanagement.entity.Speaker;
@@ -15,12 +18,15 @@ import com.example.eventmanagement.repository.SpeakerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -161,5 +167,62 @@ public class SessionService {
     private void invalidateCache() {
         log.debug("Invalidating session cache");
         sessionCache.clear();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<SessionResponse> searchSessionsNativeOptimized(String speakerFirstName, String title, Pageable pageable) {
+
+        SessionSearchKey key = new SessionSearchKey(speakerFirstName, title, pageable.getPageNumber(),
+            pageable.getPageSize(), pageable.getSort().toString() + "_native_opt");
+
+        if (sessionCache.containsKey(key)) {
+            log.debug("Cache hit for key: {}", key);
+            return sessionCache.get(key);
+        }
+
+        log.debug("Cache miss, executing native query with grouping");
+
+        int offset = (int) pageable.getOffset();
+        int limit = pageable.getPageSize();
+        List<SessionFlatDTO> flatList = sessionRepository.searchSessionsFlat(speakerFirstName, title, offset, limit);
+
+        Map<Long, SessionResponse> sessionMap = new LinkedHashMap<>();
+        for (SessionFlatDTO dto : flatList) {
+            SessionResponse session = sessionMap.computeIfAbsent(dto.getSessionId(), id -> {
+                SessionResponse sr = new SessionResponse();
+                sr.setId(dto.getSessionId());
+                sr.setTitle(dto.getTitle());
+                sr.setDescription(dto.getDescription());
+
+                EventResponse event = new EventResponse();
+                event.setId(dto.getEventId());
+                event.setName(dto.getEventName());
+                event.setDate(dto.getEventDate());
+                event.setLocation(dto.getEventLocation());
+                sr.setEvent(event);
+
+                sr.setSpeakers(new HashSet<>());
+                return sr;
+            });
+
+            if (dto.getSpeakerId() != null) {
+                SpeakerResponse speaker = new SpeakerResponse();
+                speaker.setId(dto.getSpeakerId());
+                speaker.setFirstName(dto.getFirstName());
+                speaker.setLastName(dto.getLastName());
+                speaker.setBio(dto.getBio());
+                session.getSpeakers().add(speaker);
+            }
+        }
+
+        List<SessionResponse> sessions = new ArrayList<>(sessionMap.values());
+
+        long total = sessionRepository.countSearchSessions(speakerFirstName, title);
+
+        Page<SessionResponse> page = new PageImpl<>(sessions, pageable, total);
+
+        sessionCache.put(key, page);
+
+        return page;
     }
 }

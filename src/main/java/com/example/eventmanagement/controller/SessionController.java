@@ -44,6 +44,14 @@ public class SessionController {
         return sessionService.searchSessionsNative(speakerFirstName, title, pageable);
     }
 
+    @GetMapping("/search-native-optimized")
+    public Page<SessionResponse> searchSessionsNativeOptimized(
+        @RequestParam(required = false) String speakerFirstName,
+        @RequestParam(required = false) String title,
+        @PageableDefault(size = 10, sort = "title") Pageable pageable) {
+        return sessionService.searchSessionsNativeOptimized(speakerFirstName, title, pageable);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public SessionResponse createSession(@RequestBody @Valid SessionRequest request) {

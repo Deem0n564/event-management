@@ -1,5 +1,6 @@
 package com.example.eventmanagement.repository;
 
+import com.example.eventmanagement.dto.projection.SessionFlatDTO;
 import com.example.eventmanagement.entity.Session;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -47,4 +48,30 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
             "AND (?2 IS NULL OR LOWER(s.title) LIKE LOWER(CONCAT('%', ?2, '%')))",
         nativeQuery = true)
     Page<Session> searchSessionsNative(String speakerFirstName, String title, Pageable pageable);
+
+    @Query(value = "SELECT s.id AS sessionId, s.title, s.description, " +
+        "e.id AS eventId, e.name AS eventName, e.date AS eventDate, e.location AS eventLocation, " +
+        "sp.id AS speakerId, sp.first_name, sp.last_name, sp.bio " +
+        "FROM sessions s " +
+        "LEFT JOIN events e ON s.event_id = e.id " +
+        "LEFT JOIN session_speaker ss ON s.id = ss.session_id " +
+        "LEFT JOIN speakers sp ON ss.speaker_id = sp.id " +
+        "WHERE (:speakerFirstName IS NULL OR LOWER(sp.first_name) LIKE LOWER(CONCAT('%', :speakerFirstName, '%'))) " +
+        "AND (:title IS NULL OR LOWER(s.title) LIKE LOWER(CONCAT('%', :title, '%'))) " +
+        "ORDER BY s.title " +
+        "OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY",
+        nativeQuery = true)
+    List<SessionFlatDTO> searchSessionsFlat(@Param("speakerFirstName") String speakerFirstName,
+                                            @Param("title") String title,
+                                            @Param("offset") int offset,
+                                            @Param("limit") int limit);
+
+    @Query(value = "SELECT COUNT(DISTINCT s.id) FROM sessions s " +
+        "LEFT JOIN session_speaker ss ON s.id = ss.session_id " +
+        "LEFT JOIN speakers sp ON ss.speaker_id = sp.id " +
+        "WHERE (:speakerFirstName IS NULL OR LOWER(sp.first_name) LIKE LOWER(CONCAT('%', :speakerFirstName, '%'))) " +
+        "AND (:title IS NULL OR LOWER(s.title) LIKE LOWER(CONCAT('%', :title, '%')))",
+        nativeQuery = true)
+    long countSearchSessions(@Param("speakerFirstName") String speakerFirstName,
+                             @Param("title") String title);
 }
