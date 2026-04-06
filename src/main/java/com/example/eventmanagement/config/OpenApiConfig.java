@@ -18,6 +18,6 @@ public class OpenApiConfig {
                 .description("REST API for managing events, sessions, speakers, attendees and tickets")
                 .contact(new Contact()
                     .name("Dmitry")
-                    .email("dmitrybutsen@gmail.com")));
+                    .email("dimas564564@gmail.com")));
     }
 }
