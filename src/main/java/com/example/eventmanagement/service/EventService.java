@@ -27,7 +27,6 @@ public class EventService {
 
         Event event = eventRepository.findById(id)
             .orElseThrow(() -> {
-                log.error("Event not found with id: {}", id);
                 return new EventNotFoundException("Event not found with id: " + id);
             });
 
