@@ -108,6 +108,13 @@ public class AttendeeService {
             .toList();
     }
 
+    private void checkEmailUniqueness(String email) {
+        Optional<Attendee> existing = attendeeRepository.findByEmail(email);
+        if (existing.isPresent()) {
+            throw new DuplicateEmailException("Attendee with email " + email + " already exists");
+        }
+    }
+
     public List<AttendeeResponse> createAttendeesBulkWithoutTransaction(List<AttendeeRequest> requests) {
         log.debug("Creating {} attendees WITHOUT transaction", requests.size());
 
@@ -121,12 +128,5 @@ public class AttendeeService {
             responses.add(attendeeMapper.toResponse(saved));
         }
         return responses;
-    }
-
-    private void checkEmailUniqueness(String email) {
-        Optional<Attendee> existing = attendeeRepository.findByEmail(email);
-        if (existing.isPresent()) {
-            throw new DuplicateEmailException("Attendee with email " + email + " already exists");
-        }
     }
 }
