@@ -30,6 +30,19 @@ public class AttendeeController {
         return attendeeService.createAttendee(request);
     }
 
+    @PostMapping("/bulk")
+    @ResponseStatus(HttpStatus.CREATED)
+    public List<AttendeeResponse> createAttendeesBulk(@RequestBody @Valid List<AttendeeRequest> requests) {
+        return attendeeService.createAttendeesBulk(requests);
+    }
+
+    @PostMapping("/bulk-without-tx")
+    @ResponseStatus(HttpStatus.CREATED)
+    public List<AttendeeResponse> createAttendeesBulkWithoutTransaction(
+        @RequestBody @Valid List<AttendeeRequest> requests) {
+        return attendeeService.createAttendeesBulkWithoutTransaction(requests);
+    }
+
     @GetMapping("/{id}")
     public AttendeeResponse getAttendeeById(@PathVariable Long id) {
         return attendeeService.getAttendeeById(id);
