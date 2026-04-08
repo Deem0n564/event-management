@@ -1,6 +1,5 @@
 package com.example.eventmanagement.service;
 
-//import com.example.eventmanagement.dto.request.EventCreateRequest;
 import com.example.eventmanagement.dto.request.EventRequest;
 import com.example.eventmanagement.dto.request.SessionRequest;
 import com.example.eventmanagement.dto.response.EventResponse;

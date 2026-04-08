@@ -188,7 +188,7 @@ class SessionServiceTest {
     void searchSessions_CacheMiss() {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Session> sessionPage = new PageImpl<>(List.of(session), pageable, 1);
-        when(sessionRepository.searchSessions(eq("Иван"), eq("Spring"), eq(pageable))).thenReturn(sessionPage);
+        when(sessionRepository.searchSessions("Иван", "Spring", pageable)).thenReturn(sessionPage);
         when(sessionMapper.toResponse(session)).thenReturn(sessionResponse);
 
         Page<SessionResponse> result = sessionService.searchSessions("Иван", "Spring", pageable);
@@ -268,7 +268,6 @@ class SessionServiceTest {
         when(sessionRepository.searchSessions("Иван", "Spring", pageable)).thenReturn(sessionPage);
         when(sessionMapper.toResponse(session)).thenReturn(sessionResponse);
 
-        Page<SessionResponse> result1 = sessionService.searchSessions("Иван", "Spring", pageable);
         Page<SessionResponse> result2 = sessionService.searchSessions("Иван", "Spring", pageable);
 
         assertNotNull(result2);
@@ -307,7 +306,7 @@ class SessionServiceTest {
         SessionRequest requestWithoutSpeakers = new SessionRequest();
         requestWithoutSpeakers.setTitle("Session without speakers");
         requestWithoutSpeakers.setEventId(1L);
-        requestWithoutSpeakers.setSpeakerIds(null); // или пустой Set
+        requestWithoutSpeakers.setSpeakerIds(null);
 
         when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
         when(sessionMapper.toEntity(requestWithoutSpeakers)).thenReturn(session);
@@ -346,7 +345,7 @@ class SessionServiceTest {
     void updateSession_ChangeSpeakersOnly() {
         SessionRequest updateRequest = new SessionRequest();
         updateRequest.setTitle("Updated title");
-        updateRequest.setEventId(1L); // тот же event
+        updateRequest.setEventId(1L);
         updateRequest.setSpeakerIds(Set.of(5L));
 
         when(sessionRepository.findById(1L)).thenReturn(Optional.of(session));
@@ -365,7 +364,7 @@ class SessionServiceTest {
     void searchSessionsNativeOptimized_CacheMiss() {
         Pageable pageable = PageRequest.of(0, 10);
 
-        List<SessionFlatDTO> flatList = List.of(/* создайте мок-объект SessionFlatDTO */);
+        List<SessionFlatDTO> flatList = List.of();
         when(sessionRepository.searchSessionsFlat("Иван", "Spring", 0, 10)).thenReturn(flatList);
         when(sessionRepository.countSearchSessions("Иван", "Spring")).thenReturn(1L);
 
@@ -380,7 +379,7 @@ class SessionServiceTest {
     @Test
     void searchSessionsNativeOptimized_CacheHit() {
         Pageable pageable = PageRequest.of(0, 10);
-        List<SessionFlatDTO> flatList = List.of(/* мок */);
+        List<SessionFlatDTO> flatList = List.of();
         when(sessionRepository.searchSessionsFlat("Иван", "Spring", 0, 10)).thenReturn(flatList);
         when(sessionRepository.countSearchSessions("Иван", "Spring")).thenReturn(1L);
 
@@ -404,11 +403,9 @@ class SessionServiceTest {
         assertEquals(0, result.getTotalElements());
     }
 
-    // ==================== searchSessionsNativeOptimized ====================
 
     @Test
     void searchSessionsNativeOptimized_WithSpeakers_CoversLoop() {
-        // Arrange
         Pageable pageable = PageRequest.of(0, 10);
 
         SessionFlatDTO dto1 = mock(SessionFlatDTO.class);
@@ -425,7 +422,7 @@ class SessionServiceTest {
         when(dto1.getBio()).thenReturn("Bio");
 
         SessionFlatDTO dto2 = mock(SessionFlatDTO.class);
-        when(dto2.getSessionId()).thenReturn(1L); // тот же sessionId
+        when(dto2.getSessionId()).thenReturn(1L);
         when(dto2.getSpeakerId()).thenReturn(20L);
         when(dto2.getFirstName()).thenReturn("Jane");
         when(dto2.getLastName()).thenReturn("Smith");
@@ -436,14 +433,13 @@ class SessionServiceTest {
         when(sessionRepository.searchSessionsFlat("Иван", "Spring", 0, 10)).thenReturn(flatList);
         when(sessionRepository.countSearchSessions("Иван", "Spring")).thenReturn(1L);
 
-        // Act
         Page<SessionResponse> result = sessionService.searchSessionsNativeOptimized("Иван", "Spring", pageable);
 
-        // Assert
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
-        SessionResponse sessionResponse = result.getContent().get(0);
-        assertEquals(2, sessionResponse.getSpeakers().size());
+        SessionResponse expectedResponse = result.getContent().get(0);
+
+        assertEquals(2, expectedResponse.getSpeakers().size());
         verify(sessionRepository).searchSessionsFlat("Иван", "Spring", 0, 10);
         verify(sessionRepository).countSearchSessions("Иван", "Spring");
     }
@@ -460,7 +456,7 @@ class SessionServiceTest {
         when(dto.getEventName()).thenReturn("Event 1");
         when(dto.getEventDate()).thenReturn(LocalDate.now());
         when(dto.getEventLocation()).thenReturn("Location 1");
-        when(dto.getSpeakerId()).thenReturn(null); // нет спикера
+        when(dto.getSpeakerId()).thenReturn(null);
 
         List<SessionFlatDTO> flatList = List.of(dto);
 

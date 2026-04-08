@@ -100,12 +100,12 @@ public class AttendeeService {
 
         List<Attendee> attendees = requests.stream()
             .map(attendeeMapper::toEntity)
-            .collect(Collectors.toList());
+            .toList();
 
         List<Attendee> saved = attendeeRepository.saveAll(attendees);
         return saved.stream()
             .map(attendeeMapper::toResponse)
-            .collect(Collectors.toList());
+            .toList();
     }
 
     public List<AttendeeResponse> createAttendeesBulkWithoutTransaction(List<AttendeeRequest> requests) {
