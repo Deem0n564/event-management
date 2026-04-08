@@ -194,7 +194,6 @@ class TicketServiceTest {
         assertThrows(TicketNotFoundException.class, () -> ticketService.deleteTicket(99L));
     }
 
-    // ==================== createTicket с автозаполнением purchaseDate ====================
     @Test
     void createTicket_WithNullPurchaseDate_ShouldSetCurrentDate() {
         request.setPurchaseDate(null);
@@ -210,7 +209,6 @@ class TicketServiceTest {
         verify(ticketRepository).save(ticket);
     }
 
-    // ==================== updateTicket с изменением attendee и session ====================
     @Test
     void updateTicket_WithNewAttendeeAndSession() {
         TicketRequest updateRequest = new TicketRequest();
