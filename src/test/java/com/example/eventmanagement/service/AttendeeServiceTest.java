@@ -221,4 +221,65 @@ class AttendeeServiceTest {
         assertThrows(DuplicateEmailException.class, () -> attendeeService.createAttendeesBulkWithoutTransaction(requests));
         verify(attendeeRepository, times(1)).save(att1);
     }
+
+    @Test
+    void updateAttendee_ChangeEmail_Success() {
+        AttendeeRequest updateRequest = new AttendeeRequest();
+        updateRequest.setName("Updated Name");
+        updateRequest.setEmail("newemail@example.com");
+
+        when(attendeeRepository.findById(1L)).thenReturn(Optional.of(attendee));
+        when(attendeeRepository.findByEmail("newemail@example.com")).thenReturn(Optional.empty());
+        when(attendeeRepository.save(any(Attendee.class))).thenReturn(attendee);
+        when(attendeeMapper.toResponse(attendee)).thenReturn(response);
+
+        AttendeeResponse result = attendeeService.updateAttendee(1L, updateRequest);
+
+        assertNotNull(result);
+        verify(attendeeMapper).updateEntity(updateRequest, attendee);
+        verify(attendeeRepository).save(attendee);
+    }
+
+    @Test
+    void createAttendeesBulkWithoutTransaction_Success() {
+        AttendeeRequest req1 = new AttendeeRequest();
+        req1.setName("User1");
+        req1.setEmail("user1@example.com");
+        AttendeeRequest req2 = new AttendeeRequest();
+        req2.setName("User2");
+        req2.setEmail("user2@example.com");
+        List<AttendeeRequest> requests = List.of(req1, req2);
+
+        Attendee att1 = new Attendee();
+        att1.setId(1L);
+        Attendee att2 = new Attendee();
+        att2.setId(2L);
+
+        when(attendeeRepository.findByEmail("user1@example.com")).thenReturn(Optional.empty());
+        when(attendeeRepository.findByEmail("user2@example.com")).thenReturn(Optional.empty());
+        when(attendeeMapper.toEntity(req1)).thenReturn(att1);
+        when(attendeeMapper.toEntity(req2)).thenReturn(att2);
+        when(attendeeRepository.save(att1)).thenReturn(att1);
+        when(attendeeRepository.save(att2)).thenReturn(att2);
+        when(attendeeMapper.toResponse(att1)).thenReturn(new AttendeeResponse());
+        when(attendeeMapper.toResponse(att2)).thenReturn(new AttendeeResponse());
+
+        List<AttendeeResponse> result = attendeeService.createAttendeesBulkWithoutTransaction(requests);
+
+        assertEquals(2, result.size());
+        verify(attendeeRepository, times(2)).save(any(Attendee.class));
+    }
+
+    @Test
+    void createAttendeesBulkWithoutTransaction_ExistingEmail_ThrowsException() {
+        AttendeeRequest req1 = new AttendeeRequest();
+        req1.setEmail("existing@example.com");
+        List<AttendeeRequest> requests = List.of(req1);
+
+        when(attendeeRepository.findByEmail("existing@example.com")).thenReturn(Optional.of(new Attendee()));
+
+        assertThrows(DuplicateEmailException.class, () ->
+            attendeeService.createAttendeesBulkWithoutTransaction(requests));
+        verify(attendeeRepository, never()).save(any());
+    }
 }

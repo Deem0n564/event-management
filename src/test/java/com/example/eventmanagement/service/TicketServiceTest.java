@@ -31,21 +31,11 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class TicketServiceTest {
-
-    @Mock
-    private TicketRepository ticketRepository;
-
-    @Mock
-    private AttendeeRepository attendeeRepository;
-
-    @Mock
-    private SessionRepository sessionRepository;
-
-    @Mock
-    private TicketMapper ticketMapper;
-
-    @InjectMocks
-    private TicketService ticketService;
+    @Mock private TicketRepository ticketRepository;
+    @Mock private AttendeeRepository attendeeRepository;
+    @Mock private SessionRepository sessionRepository;
+    @Mock private TicketMapper ticketMapper;
+    @InjectMocks private TicketService ticketService;
 
     private Ticket ticket;
     private TicketRequest request;
@@ -57,30 +47,17 @@ class TicketServiceTest {
     void setUp() {
         attendee = new Attendee();
         attendee.setId(1L);
-        attendee.setName("John");
-
         session = new Session();
         session.setId(1L);
-        session.setTitle("Test Session");
-
         ticket = new Ticket();
         ticket.setId(1L);
-        ticket.setType(TicketType.VIP);
-        ticket.setPrice(BigDecimal.valueOf(5000));
-        ticket.setPurchaseDate(LocalDateTime.now());
         ticket.setAttendee(attendee);
         ticket.setSession(session);
-
         request = new TicketRequest();
-        request.setType(TicketType.VIP);
-        request.setPrice(BigDecimal.valueOf(5000));
         request.setAttendeeId(1L);
         request.setSessionId(1L);
-
         response = new TicketResponse();
         response.setId(1L);
-        response.setType(TicketType.VIP);
-        response.setPrice(BigDecimal.valueOf(5000));
     }
 
     @Test
@@ -265,6 +242,35 @@ class TicketServiceTest {
     }
 
     @Test
+    void updateTicket_ChangeBothAttendeeAndSession_Success() {
+        TicketRequest updateRequest = new TicketRequest();
+        updateRequest.setType(TicketType.STANDARD);
+        updateRequest.setPrice(BigDecimal.valueOf(3000));
+        updateRequest.setAttendeeId(2L);
+        updateRequest.setSessionId(2L);
+
+        Attendee newAttendee = new Attendee();
+        newAttendee.setId(2L);
+        Session newSession = new Session();
+        newSession.setId(2L);
+
+        when(ticketRepository.findById(1L)).thenReturn(Optional.of(ticket));
+        doNothing().when(ticketMapper).updateEntity(updateRequest, ticket);
+        when(attendeeRepository.findById(2L)).thenReturn(Optional.of(newAttendee));
+        when(sessionRepository.findById(2L)).thenReturn(Optional.of(newSession));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+        when(ticketMapper.toResponse(ticket)).thenReturn(response);
+
+        TicketResponse result = ticketService.updateTicket(1L, updateRequest);
+
+        assertNotNull(result);
+        assertEquals(newAttendee, ticket.getAttendee());
+        assertEquals(newSession, ticket.getSession());
+        verify(attendeeRepository).findById(2L);
+        verify(sessionRepository).findById(2L);
+    }
+
+    @Test
     void updateTicket_NewSessionNotFound_ThrowsException() {
         TicketRequest updateRequest = new TicketRequest();
         updateRequest.setAttendeeId(1L);
@@ -278,5 +284,66 @@ class TicketServiceTest {
 
         assertThrows(SessionNotFoundException.class, () -> ticketService.updateTicket(1L, updateRequest));
         verify(ticketRepository, never()).save(any());
+    }
+
+    @Test
+    void createTicket_WithNullPurchaseDate_SetsCurrentDate() {
+        request.setPurchaseDate(null);
+
+        when(attendeeRepository.findById(1L)).thenReturn(Optional.of(attendee));
+        when(sessionRepository.findById(1L)).thenReturn(Optional.of(session));
+        when(ticketMapper.toEntity(request)).thenReturn(ticket);
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+        when(ticketMapper.toResponse(ticket)).thenReturn(response);
+
+        TicketResponse result = ticketService.createTicket(request);
+
+        assertNotNull(result);
+        assertNotNull(ticket.getPurchaseDate());
+        verify(ticketRepository).save(ticket);
+    }
+
+    @Test
+    void updateTicket_ChangeSessionId_Success() {
+        TicketRequest updateRequest = new TicketRequest();
+        updateRequest.setType(TicketType.STANDARD);
+        updateRequest.setPrice(BigDecimal.valueOf(3000));
+        updateRequest.setAttendeeId(1L);
+        updateRequest.setSessionId(2L);
+
+        Session newSession = new Session();
+        newSession.setId(2L);
+
+        when(ticketRepository.findById(1L)).thenReturn(Optional.of(ticket));
+        doNothing().when(ticketMapper).updateEntity(updateRequest, ticket);
+        when(sessionRepository.findById(2L)).thenReturn(Optional.of(newSession));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+        when(ticketMapper.toResponse(ticket)).thenReturn(response);
+
+        TicketResponse result = ticketService.updateTicket(1L, updateRequest);
+
+        assertNotNull(result);
+        assertEquals(newSession, ticket.getSession());
+        verify(sessionRepository).findById(2L);
+        verify(attendeeRepository, never()).findById(anyLong());
+    }
+
+    @Test
+    void updateTicket_NoChangeSessionId_DoesNotLoadSession() {
+        TicketRequest updateRequest = new TicketRequest();
+        updateRequest.setType(TicketType.STANDARD);
+        updateRequest.setPrice(BigDecimal.valueOf(3000));
+        updateRequest.setAttendeeId(1L);
+        updateRequest.setSessionId(1L);
+
+        when(ticketRepository.findById(1L)).thenReturn(Optional.of(ticket));
+        doNothing().when(ticketMapper).updateEntity(updateRequest, ticket);
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+        when(ticketMapper.toResponse(ticket)).thenReturn(response);
+
+        TicketResponse result = ticketService.updateTicket(1L, updateRequest);
+
+        assertNotNull(result);
+        verify(sessionRepository, never()).findById(anyLong());
     }
 }
