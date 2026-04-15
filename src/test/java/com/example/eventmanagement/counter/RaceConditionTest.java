@@ -17,7 +17,7 @@ public class RaceConditionTest {
     private static final int EXPECTED_TOTAL = THREAD_COUNT * INCREMENTS_PER_THREAD;
 
     @Test
-    void unsafeCounter_shouldShowRaceCondition() throws InterruptedException {
+    void unsafeCounterShow() throws InterruptedException {
         UnsafeCounter counter = new UnsafeCounter();
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
         CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
@@ -41,7 +41,7 @@ public class RaceConditionTest {
     }
 
     @Test
-    void synchronizedCounter_shouldBeSafe() throws InterruptedException {
+    void synchronizedCounterShow() throws InterruptedException {
         SynchronizedCounter counter = new SynchronizedCounter();
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
         CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
@@ -64,7 +64,7 @@ public class RaceConditionTest {
     }
 
     @Test
-    void atomicCounter_shouldBeSafe() throws InterruptedException {
+    void atomicCounterShow() throws InterruptedException {
         AtomicCounter counter = new AtomicCounter();
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
         CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
