@@ -22,8 +22,8 @@ public class AsyncTaskController {
     }
 
     @GetMapping("/task/{taskId}")
-    public String getTaskStatus(@PathVariable String taskId) {
-        String status = asyncTaskService.getTaskStatus(taskId);
-        return "Task " + taskId + " status: " + status;
+    public String getTaskStatus(@PathVariable Long taskId) {
+        String status = asyncTaskService.getTaskStatus(String.valueOf(taskId));
+        return "Task status: " + status;
     }
 }
