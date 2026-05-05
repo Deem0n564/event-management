@@ -1,4 +1,14 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+const API_BASE = toApiBase(import.meta.env.VITE_API_BASE_URL);
+
+function toApiBase(value) {
+  const base = (value || '').replace(/\/+$/, '');
+
+  if (!base) {
+    return '/api';
+  }
+
+  return base.endsWith('/api') ? base : `${base}/api`;
+}
 
 function toQuery(params) {
   const search = new URLSearchParams();

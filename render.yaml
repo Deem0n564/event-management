@@ -37,7 +37,10 @@ services:
       - key: NODE_VERSION
         value: "24"
       - key: VITE_API_BASE_URL
-        value: "https://event-management-api.onrender.com/api"
+        fromService:
+          type: web
+          name: event-management-api
+          envVarKey: RENDER_EXTERNAL_URL
     routes:
       - type: rewrite
         source: /*
