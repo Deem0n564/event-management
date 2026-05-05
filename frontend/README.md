@@ -19,10 +19,10 @@ Vite serves the client on `http://localhost:5173` and proxies `/api` requests to
 
 ## Run with Docker
 
-Start the Spring Boot backend on `http://localhost:8080`, then run:
+Start the full stack with one command from the project root:
 
 ```bash
-docker compose -f docker-compose.client.yml up --build
+docker compose up --build
 ```
 
-The client will be available on `http://localhost:3000`.
+The backend will be available on `http://localhost:8080`, the frontend on `http://localhost:3000`.

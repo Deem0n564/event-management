@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <property name="LOG_PATH" value="./logs"/>
-    <property name="LOG_FILE" value="event-management"/>
+    <property name="LOG_PATH" value="${LOG_PATH:-./logs}"/>
+    <property name="LOG_FILE" value="${LOG_FILE:-event-management}"/>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -23,10 +23,10 @@
         </encoder>
     </appender>
 
-    <logger name="com.example.eventmanagement" level="DEBUG"/>
-    <logger name="org.springframework.web" level="INFO"/>
-    <logger name="org.hibernate.SQL" level="DEBUG"/>
-    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
+    <logger name="com.example.eventmanagement" level="${LOG_LEVEL_APP:-INFO}"/>
+    <logger name="org.springframework.web" level="${LOG_LEVEL_WEB:-INFO}"/>
+    <logger name="org.hibernate.SQL" level="${LOG_LEVEL_SQL:-WARN}"/>
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="${LOG_LEVEL_BINDER:-WARN}"/>
 
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
