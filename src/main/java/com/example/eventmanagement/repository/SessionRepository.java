@@ -36,16 +36,22 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
                                  @Param("title") String title,
                                  Pageable pageable);
 
-    @Query(value = "SELECT DISTINCT s.* FROM sessions s " +
-        "LEFT JOIN session_speaker ss ON s.id = ss.session_id " +
-        "LEFT JOIN speakers sp ON ss.speaker_id = sp.id " +
-        "WHERE (?1 IS NULL OR LOWER(sp.first_name) LIKE LOWER(CONCAT('%', ?1, '%'))) " +
-        "AND (?2 IS NULL OR LOWER(s.title) LIKE LOWER(CONCAT('%', ?2, '%')))",
-        countQuery = "SELECT COUNT(DISTINCT s.id) FROM sessions s " +
-            "LEFT JOIN session_speaker ss ON s.id = ss.session_id " +
-            "LEFT JOIN speakers sp ON ss.speaker_id = sp.id " +
-            "WHERE (?1 IS NULL OR LOWER(sp.first_name) LIKE LOWER(CONCAT('%', ?1, '%'))) " +
-            "AND (?2 IS NULL OR LOWER(s.title) LIKE LOWER(CONCAT('%', ?2, '%')))",
+    @Query(value = "SELECT s.* FROM sessions s " +
+        "LEFT JOIN events e ON s.event_id = e.id " +
+        "WHERE (?2 IS NULL OR LOWER(s.title) LIKE LOWER(CONCAT('%', ?2, '%'))) " +
+        "AND (?1 IS NULL OR EXISTS (" +
+        "SELECT 1 FROM session_speaker ss " +
+        "JOIN speakers sp ON ss.speaker_id = sp.id " +
+        "WHERE ss.session_id = s.id " +
+        "AND LOWER(sp.first_name) LIKE LOWER(CONCAT('%', ?1, '%')))) " +
+        "ORDER BY e.date, s.title",
+        countQuery = "SELECT COUNT(*) FROM sessions s " +
+            "WHERE (?2 IS NULL OR LOWER(s.title) LIKE LOWER(CONCAT('%', ?2, '%'))) " +
+            "AND (?1 IS NULL OR EXISTS (" +
+            "SELECT 1 FROM session_speaker ss " +
+            "JOIN speakers sp ON ss.speaker_id = sp.id " +
+            "WHERE ss.session_id = s.id " +
+            "AND LOWER(sp.first_name) LIKE LOWER(CONCAT('%', ?1, '%'))))",
         nativeQuery = true)
     Page<Session> searchSessionsNative(String speakerFirstName, String title, Pageable pageable);
 
@@ -58,7 +64,7 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
         "LEFT JOIN speakers sp ON ss.speaker_id = sp.id " +
         "WHERE (:speakerFirstName IS NULL OR LOWER(sp.first_name) LIKE LOWER(CONCAT('%', :speakerFirstName, '%'))) " +
         "AND (:title IS NULL OR LOWER(s.title) LIKE LOWER(CONCAT('%', :title, '%'))) " +
-        "ORDER BY s.title " +
+        "ORDER BY e.date, s.title, sp.last_name, sp.first_name " +
         "OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY",
         nativeQuery = true)
     List<SessionFlatDTO> searchSessionsFlat(@Param("speakerFirstName") String speakerFirstName,
