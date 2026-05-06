@@ -20,7 +20,7 @@ public class EventManagementApplication {
 
     private static void configureDatabaseUrl() {
         if (hasText(System.getProperty(SPRING_DATASOURCE_URL))
-                || hasText(System.getenv("SPRING_DATASOURCE_URL"))) {
+                || hasText(System.getenv(SPRING_DATASOURCE_URL))) {
             return;
         }
 
@@ -32,7 +32,7 @@ public class EventManagementApplication {
         }
 
         if (databaseUrl.startsWith("jdbc:")) {
-            System.setProperty("SPRING_DATASOURCE_URL", databaseUrl);
+            System.setProperty(SPRING_DATASOURCE_URL, databaseUrl);
             return;
         }
 
@@ -51,7 +51,7 @@ public class EventManagementApplication {
         String port = uri.getPort() > 0 ? ":" + uri.getPort() : "";
         String query = hasText(uri.getRawQuery()) ? "?" + uri.getRawQuery() : "";
 
-        System.setProperty("SPRING_DATASOURCE_URL", "jdbc:postgresql://" + host + port + path + query);
+        System.setProperty(SPRING_DATASOURCE_URL, "jdbc:postgresql://" + host + port + path + query);
         configureDatabaseCredentials(uri.getRawUserInfo());
     }
 
