@@ -84,62 +84,62 @@ jobs:
             echo "::error::Set the RENDER_DEPLOY_HOOK_URL repository secret for the API service."
             exit 1
           fi
-          
+
           if [ -z "$RENDER_CLIENT_DEPLOY_HOOK_URL" ]; then
             echo "::error::Set the RENDER_CLIENT_DEPLOY_HOOK_URL repository secret for the client static site."
             exit 1
           fi
-          
+
           curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL"
           curl -fsS -X POST "$RENDER_CLIENT_DEPLOY_HOOK_URL"
 
-    healthcheck:
-      name: Healthcheck after deploy
-      runs-on: ubuntu-latest
-      needs:
-        - deploy
-      if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-      steps:
-        - name: API healthcheck
-          env:
-            APP_BASE_URL: ${{ vars.APP_BASE_URL }}
-          run: |
-            if [ -z "$APP_BASE_URL" ]; then
-              echo "::error::Set the APP_BASE_URL repository variable, for example https://event-management-api.onrender.com."
-              exit 1
+  healthcheck:
+    name: Healthcheck after deploy
+    runs-on: ubuntu-latest
+    needs:
+      - deploy
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    steps:
+      - name: API healthcheck
+        env:
+          APP_BASE_URL: ${{ vars.APP_BASE_URL }}
+        run: |
+          if [ -z "$APP_BASE_URL" ]; then
+            echo "::error::Set the APP_BASE_URL repository variable, for example https://event-management-api.onrender.com."
+            exit 1
+          fi
+
+          for attempt in {1..60}; do
+            if curl -fsS "$APP_BASE_URL/actuator/health" | grep -q '"status":"UP"'; then
+              echo "Application healthcheck passed."
+              exit 0
             fi
 
-            for attempt in $(seq 1 60); do
-              if curl -fsS "$APP_BASE_URL/actuator/health" | grep -q '"status":"UP"'; then
-                echo "Application healthcheck passed."
-                exit 0
-              fi
+            echo "Waiting for healthy deployment... attempt $attempt/60"
+            sleep 10
+          done
 
-              echo "Waiting for healthy deployment... attempt $attempt/60"
-              sleep 10
-            done
+          echo "::error::Healthcheck failed after waiting for the deployment."
+          exit 1
 
-            echo "::error::Healthcheck failed after waiting for the deployment."
+      - name: Client healthcheck
+        env:
+          CLIENT_BASE_URL: ${{ vars.CLIENT_BASE_URL }}
+        run: |
+          if [ -z "$CLIENT_BASE_URL" ]; then
+            echo "::error::Set the CLIENT_BASE_URL repository variable, for example https://event-management-client.onrender.com."
             exit 1
+          fi
 
-        - name: Client healthcheck
-          env:
-            CLIENT_BASE_URL: ${{ vars.CLIENT_BASE_URL }}
-          run: |
-            if [ -z "$CLIENT_BASE_URL" ]; then
-              echo "::error::Set the CLIENT_BASE_URL repository variable, for example https://event-management-client.onrender.com."
-              exit 1
+          for attempt in {1..60}; do
+            if curl -fsS "$CLIENT_BASE_URL" | grep -q '<div id="root"></div>'; then
+              echo "Client healthcheck passed."
+              exit 0
             fi
 
-            for attempt in $(seq 1 60); do
-              if curl -fsS "$CLIENT_BASE_URL" | grep -q '<div id="root"></div>'; then
-                echo "Client healthcheck passed."
-                exit 0
-              fi
+            echo "Waiting for client deployment... attempt $attempt/60"
+            sleep 10
+          done
 
-              echo "Waiting for client deployment... attempt $attempt/60"
-              sleep 10
-            done
-
-            echo "::error::Client healthcheck failed after waiting for the deployment."
-            exit 1
+          echo "::error::Client healthcheck failed after waiting for the deployment."
+          exit 1
