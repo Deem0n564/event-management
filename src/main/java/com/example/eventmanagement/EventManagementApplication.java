@@ -11,13 +11,15 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @SpringBootApplication
 @EnableAsync
 public class EventManagementApplication {
+    public static final String SPRING_DATASOURCE_URL = "spring.datasource.url";
+
     public static void main(String[] args) {
         configureDatabaseUrl();
         SpringApplication.run(EventManagementApplication.class, args);
     }
 
     private static void configureDatabaseUrl() {
-        if (hasText(System.getProperty("spring.datasource.url"))
+        if (hasText(System.getProperty(SPRING_DATASOURCE_URL))
                 || hasText(System.getenv("SPRING_DATASOURCE_URL"))) {
             return;
         }
